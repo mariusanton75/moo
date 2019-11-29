@@ -8,7 +8,7 @@ import com.moo.model.Address;
 import com.moo.model.Customer;
 
 @RestController
-public class CostomerController {
+public class CustomerController {
 	@RequestMapping("/customer")
 	  public Customer getCustomerByName(@RequestParam(value="name") String name) {
 	    Customer customer = new Customer();
