@@ -5,12 +5,27 @@ public class Address {
 	private int number;
 	private String street;
 	private String city;
-	private String province;
 	private String zip;
 	private String country;
 
 	public Address() {
 	}
+
+	
+	
+	
+	public Address(Long id, int number, String street, String city, String zip, String country) {
+		super();
+		this.id = id;
+		this.number = number;
+		this.street = street;
+		this.city = city;
+		this.zip = zip;
+		this.country = country;
+	}
+
+
+
 
 	public Long getId() {
 		return id;
@@ -44,13 +59,6 @@ public class Address {
 		this.city = city;
 	}
 
-	public String getProvince() {
-		return province;
-	}
-
-	public void setProvince(String province) {
-		this.province = province;
-	}
 
 	public String getZip() {
 		return zip;

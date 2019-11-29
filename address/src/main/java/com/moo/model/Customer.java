@@ -8,8 +8,26 @@ public class Customer {
 	private String email;
 	private String phone;
 
+	
+	
 	public Customer() {
 	}
+
+	
+	
+	
+	public Customer(int id, String firstname, String lastname, Address address, String email, String phone) {
+		super();
+		this.id = id;
+		this.firstname = firstname;
+		this.lastname = lastname;
+		this.address = address;
+		this.email = email;
+		this.phone = phone;
+	}
+
+
+
 
 	public int getId() {
 		return id;

@@ -8,6 +8,7 @@ class AddressApplicationTests {
 
 	@Test
 	void contextLoads() {
+		
 	}
 
 }
