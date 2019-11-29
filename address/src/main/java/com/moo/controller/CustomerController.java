@@ -1,19 +1,19 @@
 package com.moo.controller;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.moo.exception.CustomerNotFoundException;
 import com.moo.mock.database.MockDatabase;
 import com.moo.model.Customer;
 
@@ -24,16 +24,12 @@ public class CustomerController {
 	private MockDatabase mockDatabase;
 
 	@GetMapping(value = "/customer/{name}")
-	public ResponseEntity<Customer> getCustomerByName(@PathVariable String name,
-            HttpServletResponse res) {
-		
-		Customer result = mockDatabase.getCustomerByName(name);
-		
-		if(result == null) {
-			return ResponseEntity.notFound().build();
-		}else {
-			return ResponseEntity.ok().body(result);
-		}
+	public ResponseEntity<Customer> getCustomerByName(@PathVariable String name, HttpServletResponse res) {
+
+		Customer result = Optional.ofNullable(mockDatabase.getCustomerByName(name))
+				.orElseThrow(() -> new CustomerNotFoundException(name));
+
+		return ResponseEntity.ok().body(result);
 
 	}
 
