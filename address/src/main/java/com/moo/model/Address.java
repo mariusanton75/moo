@@ -1,5 +1,7 @@
 package com.moo.model;
 
+import java.util.Objects;
+
 public class Address {
 	private Long id;
 	private int number;
@@ -75,5 +77,44 @@ public class Address {
 	public void setCountry(String country) {
 		this.country = country;
 	}
+
+
+
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(city, country, id, number, street, zip);
+	}
+
+
+
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof Address)) {
+			return false;
+		}
+		Address other = (Address) obj;
+		return Objects.equals(city, other.city) && Objects.equals(country, other.country)
+				&& Objects.equals(id, other.id) && number == other.number && Objects.equals(street, other.street)
+				&& Objects.equals(zip, other.zip);
+	}
+
+
+
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Address [id=").append(id).append(", number=").append(number).append(", street=").append(street)
+				.append(", city=").append(city).append(", zip=").append(zip).append(", country=").append(country)
+				.append("]");
+		return builder.toString();
+	}
+
+
 
 }
