@@ -3,23 +3,31 @@ package com.moo.test.address;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.runner.RunWith;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.StringHttpMessageConverter;
@@ -40,13 +48,15 @@ import com.moo.model.Address;
 import com.moo.model.Customer;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest
+@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
 public class CustomerControllerTest {
 
 	private static final Logger LOGGER = Logger.getLogger(CustomerControllerTest.class.getName());
 
 	private static final String NEW_LINE = "\n";
-	private static final String CUSTOMER_URI = "http://localhost:8080/customer/{name}";
+
+	private TestRestTemplate testRestTemplate = new TestRestTemplate();
+	private HttpHeaders headers = new HttpHeaders();
 
 	@Autowired
 	private ObjectMapper objectMapper;
@@ -57,22 +67,16 @@ public class CustomerControllerTest {
 	@Autowired
 	private CustomerController customerController;
 
-	private TestRestTemplate restTemplate = null;
-	private HttpHeaders headers = null;
 	private MockMvc mockMvc = null;
 
 	@Before
 	public void before() throws Exception {
 		mockMvc = webAppContextSetup(webApplicationContext).build();
-		headers = new HttpHeaders();
-		restTemplate = new TestRestTemplate();
 	}
 
 	@After
 	public void after() throws Exception {
 		mockMvc = null;
-		headers = null;
-		restTemplate = null;
 	}
 
 	@Test
@@ -80,47 +84,90 @@ public class CustomerControllerTest {
 		assertThat(customerController).isNotNull();
 	}
 
+	/**
+	 * Test the customer received as JSON string
+	 * 
+	 * @throws Exception
+	 */
 	@Test
-	public void testRetrieveCustomerAsJson() throws Exception {
+	public void testGetCustomerByIdAsString() throws Exception {
 		HttpEntity<String> entity = new HttpEntity<String>(null, headers);
-		ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/customer/Bardin"), HttpMethod.GET,
+
+		ResponseEntity<String> response = testRestTemplate.exchange(createURLWithPort("/customer/7"), HttpMethod.GET,
 				entity, String.class);
+
 		String expected = "{\"id\":7,\"firstname\":\"Armand\",\"lastname\":\"Bardin\"," + "\"address\":"
 				+ "{\"id\":2,\"number\":113,\"street\":\"Maidstone Road\",\"city\":\"WESSINGTON\",\"zip\":\"DE55 9TU\",\"country\":\"UK\"},"
 				+ "\"email\":\"r9mz386lv6@fakemailgenerator.net\",\"phone\":\"+44077 6354 8111\"}";
 
+		printLog(response.getBody());
 		JSONAssert.assertEquals(expected, response.getBody(), false);
 	}
 
+	/**
+	 * Test the customers received as array of entities
+	 * 
+	 * @throws Exception
+	 */
 	@Test
-	public void testRetrieveCustomerAsEntity() throws Exception {
-		HttpEntity<Customer> entity = new HttpEntity<Customer>(null, headers);
-		ResponseEntity<Customer> response = restTemplate.exchange(createURLWithPort("/customer/Bardin"), HttpMethod.GET,
-				entity, Customer.class);
+	public void testGetCustomersByNameAsEntity() throws Exception {
+
+		ResponseEntity<Customer[]> response = testRestTemplate.getForEntity(createURLWithPort("/customersname/Danaila"),
+				Customer[].class);
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+		Customer[] array = response.getBody();
+
+		List<Customer> resultList = Arrays.asList(new Customer(25, "Razvan", "Danaila", null, null, null),
+				new Customer(26, "Lucia", "Danaila", null, null, null));
+
+		for (Customer customer : array) {
+			this.printLog(customer.toString());
+			assertTrue(resultList.contains(customer));
+		}
+	}
+
+	/**
+	 * Test the customers received as entity
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testGetCustomerByIdAsEntity() throws Exception {
+
+		ResponseEntity<Customer> response = testRestTemplate.getForEntity(createURLWithPort("/customer/7"),
+				Customer.class);
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
 		Customer customerExpected = new Customer(7, "Armand", "Bardin",
 				new Address(2L, 113, "Maidstone Road", "WESSINGTON", "DE55 9TU", "UK"),
 				"r9mz386lv6@fakemailgenerator.net", "+44077 6354 8111");
 		assertEquals(customerExpected, response.getBody());
 	}
 
+	/**
+	 * Test the search for a non existing customer
+	 * 
+	 * @throws Exception
+	 */
 	@Test
 	public void testRetrieveRestTemplateFail() throws Exception {
 
 		printLog("START TEST ERROR");
 
-		Object result = this.callToRestService(HttpMethod.GET, createURLWithPort("/customer/Crommwell"), null,
-				Customer.class);
+		Object result = this.callToRestService(HttpMethod.GET, createURLWithPort("/customer/78"), null, Customer.class);
 
 		assertNull(result);
 		printLog("END ERROR TEST");
 	}
 
-	/**
-	 * Testing Happy Path scenario
-	 */
+	// Testing Happy Path scenario
+	// use mockMvc way of testing REST services
 	@Test
 	public void testCustomerFound() throws Exception {
-		final MockHttpServletRequestBuilder builder = get(CUSTOMER_URI, "Bardin");
+		final MockHttpServletRequestBuilder builder = get(createURLWithPort("/customer/{id}"), 25);
 		final ResultActions result = mockMvc.perform(builder);
 
 		result.andExpect(status().isOk());
@@ -131,12 +178,11 @@ public class CustomerControllerTest {
 		printLog("\n\n The result is: " + response);
 	}
 
-	/**
-	 * Testing Error scenario
-	 */
+	// Testing Error scenario
+	// use mockMvc way of testing REST services
 	@Test
 	public void testCustomerNotFound() throws Exception {
-		final MockHttpServletRequestBuilder builder = get(createURLWithPort("/customer/{name}"), "NotExisting");
+		final MockHttpServletRequestBuilder builder = get(createURLWithPort("/customer/{id}"), 100);
 		final ResultActions result = mockMvc.perform(builder);
 		result.andExpect(status().isNotFound());
 
@@ -144,10 +190,21 @@ public class CustomerControllerTest {
 	}
 
 	private String createURLWithPort(String uri) {
-		return "http://localhost:" + "8080" + uri;
+		return "http://localhost:8080" + uri;
 	}
 
-	public Object callToRestService(HttpMethod httpMethod, String url, Object requestObject, Class<?> responseObject) {
+	/**
+	 * Specific method to treat different kind of errors
+	 * 
+	 * 
+	 * 
+	 * @param httpMethod
+	 * @param url
+	 * @param requestObject
+	 * @param responseObject
+	 * @return
+	 */
+	private Object callToRestService(HttpMethod httpMethod, String url, Object requestObject, Class<?> responseObject) {
 
 		printLog("Url : " + url);
 
@@ -180,10 +237,8 @@ public class CustomerControllerTest {
 
 		} catch (HttpClientErrorException exception) {
 			printLog("callToRestService HttpClientErrorException :" + exception.getResponseBodyAsString());
-			// Handle exception here
 		} catch (HttpStatusCodeException exception) {
 			printLog("callToRestService HttpClientErrorException :" + exception.getResponseBodyAsString());
-			// Handle exception here
 		} catch (JsonProcessingException exception) {
 			printLog("JsonProcessingException Error :" + exception.getMessage());
 		}

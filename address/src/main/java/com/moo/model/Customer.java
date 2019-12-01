@@ -2,16 +2,21 @@ package com.moo.model;
 
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 public class Customer {
 	private int id;
 	private String firstname;
 	private String lastname;
+
+	@JsonInclude(value = Include.NON_NULL)
 	private Address address;
+	@JsonInclude(value = Include.NON_NULL)
 	private String email;
+	@JsonInclude(value = Include.NON_NULL)
 	private String phone;
 
-	
-	
 	public Customer() {
 	}
 
@@ -98,5 +103,4 @@ public class Customer {
 				firstname, lastname, address, email, phone);
 	}
 
-	
 }

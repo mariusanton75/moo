@@ -10,4 +10,7 @@ public class CustomerNotFoundException extends RuntimeException {
 	public CustomerNotFoundException(String name) {
 		super("Could not find customer " + name);
 	}
+	public CustomerNotFoundException(int id) {
+		super("Could not find customer with id: " + id);
+	}
 }

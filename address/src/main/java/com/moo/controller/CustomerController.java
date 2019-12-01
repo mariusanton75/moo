@@ -23,17 +23,23 @@ public class CustomerController {
 	@Autowired
 	private MockDatabase mockDatabase;
 
-	@GetMapping(value = "/customer/{name}")
-	public ResponseEntity<Customer> getCustomerByName(@PathVariable String name, HttpServletResponse res) {
-
-		Customer result = Optional.ofNullable(mockDatabase.getCustomerByName(name))
+	@GetMapping(value = "/customersname/{name}")
+	public ResponseEntity<List<Customer>> getCustomerByName(@PathVariable String name, HttpServletResponse res) {
+		List<Customer> result = Optional.ofNullable(mockDatabase.getCustomerListByName(name))
 				.orElseThrow(() -> new CustomerNotFoundException(name));
+		return ResponseEntity.ok().body(result);
+	}
 
+
+	@GetMapping(value = "/customer/{id}")
+	public ResponseEntity<Customer> getCustomerById(@PathVariable int id, HttpServletResponse res) {
+		Customer result = Optional.ofNullable(mockDatabase.getCustomerById(id))
+				.orElseThrow(() -> new CustomerNotFoundException(id));
 		return ResponseEntity.ok().body(result);
 
 	}
 
-	@RequestMapping("/customers")
+	@RequestMapping("/allcustomers")
 	public List<Customer> getCustomers() {
 		return mockDatabase.getCustomers();
 
