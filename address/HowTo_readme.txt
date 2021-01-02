@@ -22,5 +22,7 @@ Example: "http://localhost:8080/customersname/Danaila"
 as example "http://localhost:8080/customer/26"
 
 	- http://localhost:8080/shutdown 				to shutdown the application
+	
+	Test2
 
 
